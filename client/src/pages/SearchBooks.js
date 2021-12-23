@@ -5,7 +5,7 @@ import { useMutation } from '@apollo/client';
 import { SAVE_BOOK } from '../utils/mutations'
 
 import Auth from '../utils/auth';
-import { saveBook, searchGoogleBooks } from '../utils/API';
+import { searchGoogleBooks } from '../utils/API';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 
 const SearchBooks = () => {
@@ -46,6 +46,8 @@ const SearchBooks = () => {
         title: book.volumeInfo.title,
         description: book.volumeInfo.description,
         image: book.volumeInfo.imageLinks?.thumbnail || '',
+        // added link during graphQL update
+        link: book.volumeInfo.canonicalVolumeLink || ''
       }));
 
       setSearchedBooks(bookData);
@@ -55,18 +57,22 @@ const SearchBooks = () => {
     }
   };
 
+  const [saveBook] = useMutation(SAVE_BOOK);
+
   // create function to handle saving a book to our database
   const handleSaveBook = async (bookId) => {
     // find the book in `searchedBooks` state by the matching id
     const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
     
-    const [saveBook, { error }] = useMutation(SAVE_BOOK);
-
+    console.log('- - - - - - - - - - - - - - - ');
+    console.log('Here is the book you selected:');
+    console.log(bookToSave);
+    console.log('- - - - - - - - - - - - - - - ');
+    
     try {
       await saveBook({
         variables: { bookToSave }
       });
-
       // if book successfully saves to user's account, save book id to state
       setSavedBookIds([...savedBookIds, bookToSave.bookId]);
     } catch (err) {
